@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Browse Examinations</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam
+        </a>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="exams.html" class="nav-link active"><i class="fa-solid fa-file-signature"></i> Exams</a></li>
+        </ul>
+        <div class="user-profile-nav" id="user-nav-action">
+            <a href="login.html" class="nav-btn-outline"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+            <a href="register.html" class="nav-btn"><i class="fa-solid fa-user-plus"></i> Register</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="section-header">
+            <h2 class="section-title">Available Examinations</h2>
+            <p class="section-desc">Search and select an examination to launch your assessment session.</p>
+        </div>
+
+        <!-- Search / Filter panel -->
+        <div class="card" style="margin-bottom: 3rem; padding: 1.5rem;">
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <div style="flex: 2; min-width: 250px; position: relative;">
+                    <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                    </span>
+                    <input type="text" id="exam-search" class="form-control" style="padding-left: 2.75rem;" placeholder="Search exams by title or subject..." oninput="filterExams()">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <select id="subject-filter" class="form-control form-select" onchange="filterExams()">
+                        <option value="">All Subjects</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exams Grid -->
+        <div class="exams-grid" id="exams-list-container">
+            <div class="card exam-card" style="justify-content: center; align-items: center; min-height: 250px;">
+                <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary);"></i>
+                <p style="margin-top: 1rem; color: var(--text-secondary);">Fetching available assessments...</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Start Exam Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-exam-modal">
+        <div class="modal-content">
+            <button class="modal-close" onclick="closeExamModal()">&times;</button>
+            <h3 class="modal-title" id="confirm-modal-title">Python Programming Test</h3>
+            
+            <div style="margin-bottom: 2rem;">
+                <div class="exam-details" style="grid-template-columns: 1fr 1fr; margin-bottom: 1.5rem;">
+                    <div class="detail-item">
+                        <span class="detail-label">Subject</span>
+                        <span class="detail-val" id="modal-subject">Python</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Date Limit</span>
+                        <span class="detail-val" id="modal-date">2026-08-15</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Duration</span>
+                        <span class="detail-val" id="modal-duration">60 Minutes</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Marks</span>
+                        <span class="detail-val" id="modal-marks">100 Marks</span>
+                    </div>
+                </div>
+
+                <div style="background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); padding: 1.25rem; border-radius: var(--radius-md); font-size: 0.9rem; color: var(--text-secondary);">
+                    <h4 style="color: var(--warning); margin-bottom: 0.5rem;"><i class="fa-solid fa-triangle-exclamation"></i> Important Instructions</h4>
+                    <ul style="padding-left: 1.25rem; margin-top: 0.25rem; display: flex; flex-direction: column; gap: 0.35rem;">
+                        <li>Ensure you have a stable network connection before starting.</li>
+                        <li>Do not refresh or close the exam tab once the test starts.</li>
+                        <li>Shuffled question orders are unique to your session.</li>
+                        <li>The system will auto-submit when the countdown expires.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button class="nav-btn-outline" onclick="closeExamModal()">Cancel</button>
+                <button class="nav-btn" id="start-exam-confirm-btn">Start Examination</button>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 NexExam. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        let allExams = [];
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchExamsList();
+        });
+
+        async function fetchExamsList() {
+            try {
+                const res = await fetch('/exams/');
+                if (!res.ok) throw new Error("Failed to load examinations");
+                allExams = await res.json();
+                
+                // Populate subject drop-down filter
+                const subjects = [...new Set(allExams.map(x => x.subject))];
+                const filter = document.getElementById('subject-filter');
+                filter.innerHTML = '<option value="">All Subjects</option>';
+                subjects.forEach(sub => {
+                    filter.innerHTML += `<option value="${sub}">${sub}</option>`;
+                });
+                
+                renderExams(allExams);
+            } catch (err) {
+                console.error(err);
+                document.getElementById('exams-list-container').innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--danger);">
+                        <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                        <p style="margin-top: 1rem;">Failed to fetch examinations. Check API server connection.</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderExams(exams) {
+            const container = document.getElementById('exams-list-container');
+            if (exams.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--text-secondary);">
+                        <i class="fa-solid fa-inbox fa-2x"></i>
+                        <p style="margin-top: 1rem;">No matching examinations found.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = '';
+            exams.forEach(exam => {
+                const card = document.createElement('div');
+                card.className = 'card exam-card';
+                card.innerHTML = `
+                    <div class="exam-header">
+                        <span class="exam-subject">${exam.subject}</span>
+                        <span class="exam-date-badge"><i class="fa-regular fa-calendar"></i> ${exam.exam_date}</span>
+                    </div>
+                    <h3 class="exam-card-title">${exam.exam_title}</h3>
+                    <div class="exam-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Duration</span>
+                            <span class="detail-val"><i class="fa-regular fa-clock"></i> ${exam.duration}m</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Marks</span>
+                            <span class="detail-val"><i class="fa-regular fa-circle-check"></i> ${exam.total_marks} pts</span>
+                        </div>
+                    </div>
+                    <button class="nav-btn exam-action" onclick="promptStartExam(${exam.exam_id})">
+                        <i class="fa-solid fa-play"></i> Start Exam
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterExams() {
+            const searchVal = document.getElementById('exam-search').value.toLowerCase();
+            const subjectVal = document.getElementById('subject-filter').value;
+            
+            const filtered = allExams.filter(exam => {
+                const matchesSearch = exam.exam_title.toLowerCase().includes(searchVal) || exam.subject.toLowerCase().includes(searchVal);
+                const matchesSubject = subjectVal === "" || exam.subject === subjectVal;
+                return matchesSearch && matchesSubject;
+            });
+            renderExams(filtered);
+        }
+
+        function promptStartExam(examId) {
+            // Check session
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                showNotification("Please log in as a student to start examinations", "info");
+                setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+                return;
+            }
+            if (user.role !== 'student') {
+                showNotification("Only registered students can participate in examinations", "error");
+                return;
+            }
+
+            const exam = allExams.find(x => x.exam_id === examId);
+            if (!exam) return;
+
+            document.getElementById('confirm-modal-title').innerText = exam.exam_title;
+            document.getElementById('modal-subject').innerText = exam.subject;
+            document.getElementById('modal-date').innerText = exam.exam_date;
+            document.getElementById('modal-duration').innerText = `${exam.duration} Minutes`;
+            document.getElementById('modal-marks').innerText = `${exam.total_marks} Marks`;
+
+            document.getElementById('start-exam-confirm-btn').onclick = () => {
+                window.location.href = `exam.html?id=${exam.exam_id}`;
+            };
+
+            document.getElementById('confirm-exam-modal').classList.add('open');
+        }
+
+        function closeExamModal() {
+            document.getElementById('confirm-exam-modal').classList.remove('open');
+        }
+    </script>
+</body>
+</html>

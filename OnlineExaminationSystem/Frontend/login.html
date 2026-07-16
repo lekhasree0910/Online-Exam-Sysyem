@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Access Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="exams.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Exams</a></li>
+        </ul>
+        <div class="user-profile-nav">
+            <a href="register.html" class="nav-btn"><i class="fa-solid fa-user-plus"></i> Register</a>
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="card form-card">
+            <div class="section-header" style="margin-bottom: 2rem;">
+                <h2 class="section-title" style="font-size: 1.75rem;">Access Portal</h2>
+                <p class="section-desc">Log in to attempt exams or manage assessments.</p>
+            </div>
+
+            <!-- Role Selector Toggle -->
+            <div class="auth-roles">
+                <button type="button" class="role-btn active" id="role-student" onclick="setRole('student')">
+                    <i class="fa-solid fa-user-graduate"></i> Student
+                </button>
+                <button type="button" class="role-btn" id="role-admin" onclick="setRole('admin')">
+                    <i class="fa-solid fa-user-shield"></i> Administrator
+                </button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form">
+                <div class="form-group">
+                    <label class="form-label" for="login-email">Email Address</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                            <i class="fa-solid fa-envelope"></i>
+                        </span>
+                        <input type="email" id="login-email" class="form-control" style="padding-left: 2.75rem;" placeholder="name@domain.com" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Password</label>
+                    <div style="position: relative;">
+                        <span style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); color: var(--text-muted);">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="login-password" class="form-control" style="padding-left: 2.75rem;" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="nav-btn submit-btn" id="login-submit-btn">
+                    <i class="fa-solid fa-right-to-bracket"></i> Sign In
+                </button>
+            </form>
+
+            <div class="form-footer">
+                Don't have a student account? <a href="register.html" class="form-link">Register here</a>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 NexExam. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        let currentRole = 'student';
+
+        function setRole(role) {
+            currentRole = role;
+            document.querySelectorAll('.role-btn').forEach(btn => btn.classList.remove('active'));
+            if (role === 'student') {
+                document.getElementById('role-student').classList.add('active');
+                document.querySelector('.form-footer').style.display = 'block';
+            } else {
+                document.getElementById('role-admin').classList.add('active');
+                document.querySelector('.form-footer').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

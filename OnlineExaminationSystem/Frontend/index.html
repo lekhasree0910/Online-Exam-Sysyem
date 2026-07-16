@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Next-Gen Online Examination Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- FontAwesome for Premium Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam
+        </a>
+        <ul class="nav-links" id="nav-links">
+            <li><a href="index.html" class="nav-link active"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="exams.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Exams</a></li>
+            <!-- Dynamic elements will be inserted by JS script -->
+        </ul>
+        <div class="user-profile-nav" id="user-nav-action">
+            <a href="login.html" class="nav-btn-outline"><i class="fa-solid fa-right-to-bracket"></i> Login</a>
+            <a href="register.html" class="nav-btn"><i class="fa-solid fa-user-plus"></i> Register</a>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <main class="container">
+        <!-- Hero Banner Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <span class="hero-tag">Smart Assessments</span>
+                <h1 class="hero-title">Empowering Smart, Secure Online Exams</h1>
+                <p class="hero-desc">Conduct assessments, manage question banks, verify student performance, and view instant analytics with our state-of-the-art online exam portal.</p>
+                <div class="hero-buttons">
+                    <a href="exams.html" class="nav-btn"><i class="fa-solid fa-circle-play"></i> Get Started</a>
+                    <a href="#about" class="nav-btn-outline"><i class="fa-solid fa-circle-info"></i> Learn More</a>
+                </div>
+            </div>
+            <div class="hero-img-container">
+                <!-- SVG Illustrative Graphic representing online test -->
+                <svg class="hero-svg" viewBox="0 0 500 400" width="100%" height="auto" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Base background grid/shape -->
+                    <rect x="50" y="50" width="400" height="300" rx="20" fill="url(#hero-gradient)" stroke="rgba(255,255,255,0.08)" stroke-width="2"/>
+                    <!-- Screen header -->
+                    <rect x="50" y="50" width="400" height="40" rx="0" fill="rgba(255,255,255,0.03)" />
+                    <circle cx="80" cy="70" r="6" fill="#ef4444" />
+                    <circle cx="100" cy="70" r="6" fill="#f59e0b" />
+                    <circle cx="120" cy="70" r="6" fill="#10b981" />
+                    <!-- Visual card representing test item -->
+                    <rect x="100" y="130" width="300" height="60" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" />
+                    <rect x="120" y="150" width="140" height="8" rx="4" fill="#a5b4fc" />
+                    <rect x="120" y="165" width="80" height="8" rx="4" fill="#9ca3af" />
+                    <circle cx="360" cy="160" r="12" fill="#10b981" />
+                    <path d="M355 160L358 163L365 156" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    
+                    <rect x="100" y="210" width="300" height="60" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.08)" />
+                    <rect x="120" y="230" width="180" height="8" rx="4" fill="#a5b4fc" />
+                    <rect x="120" y="245" width="110" height="8" rx="4" fill="#9ca3af" />
+                    <circle cx="360" cy="240" r="12" fill="#6366f1" />
+                    
+                    <defs>
+                        <linearGradient id="hero-gradient" x1="0" y1="0" x2="500" y2="400" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#111827" />
+                            <stop offset="1" stop-color="#1f2937" />
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+        </section>
+
+        <!-- Featured Examinations Section -->
+        <section id="featured-exams">
+            <div class="section-header">
+                <h2 class="section-title">Featured Examinations</h2>
+                <p class="section-desc">Test your capability with our curated selection of featured subjects.</p>
+            </div>
+            <div class="exams-grid" id="featured-exams-list">
+                <!-- Dynamically loaded exam cards will go here -->
+                <div class="card exam-card" style="justify-content: center; align-items: center; min-height: 250px;">
+                    <i class="fa-solid fa-spinner fa-spin fa-2x" style="color: var(--primary);"></i>
+                    <p style="margin-top: 1rem; color: var(--text-secondary);">Loading available exams...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section class="about-grid" id="about">
+            <div>
+                <span class="hero-tag" style="background: rgba(14,165,233,0.1); color: var(--secondary); border-color: rgba(14,165,233,0.2);">Overview</span>
+                <h2 class="hero-title" style="font-size: 2.5rem; margin-top: 0.5rem;">A Complete Assessment Suite</h2>
+                <p class="hero-desc">NexExam streamlines testing for both administration and students. Administrators can easily construct questions and verify scores, while students experience a secure testing terminal with interactive aids.</p>
+            </div>
+            <div class="about-features">
+                <div class="about-feature-item">
+                    <div class="about-feature-icon"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div>
+                        <h3 class="about-feature-title">Real-Time Countdown Timer</h3>
+                        <p class="about-feature-desc">Interactive timers keep students aware of remaining session limits, automatically compiling submissions if the timer reaches zero.</p>
+                    </div>
+                </div>
+                <div class="about-feature-item">
+                    <div class="about-feature-icon"><i class="fa-solid fa-shuffle"></i></div>
+                    <div>
+                        <h3 class="about-feature-title">Randomized Question Delivery</h3>
+                        <p class="about-feature-desc">Shuffles test item orders dynamically for each unique session to prevent collusion and ensure integrity.</p>
+                    </div>
+                </div>
+                <div class="about-feature-item">
+                    <div class="about-feature-icon"><i class="fa-solid fa-trophy"></i></div>
+                    <div>
+                        <h3 class="about-feature-title">Leaderboards and Analytics</h3>
+                        <p class="about-feature-desc">Review top scores and class statistics dynamically to gauge understanding levels and celebrate top performers.</p>
+                    </div>
+                </div>
+                <div class="about-feature-item">
+                    <div class="about-feature-icon"><i class="fa-solid fa-file-pdf"></i></div>
+                    <div>
+                        <h3 class="about-feature-title">PDF Score Report Downloads</h3>
+                        <p class="about-feature-desc">Download detailed score cards with correct/incorrect breakdown as a print-ready PDF certificate.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-brand"><i class="fa-solid fa-graduation-cap"></i> NexExam</div>
+            <ul class="footer-links">
+                <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                <li><a href="#" class="footer-link">Terms of Service</a></li>
+                <li><a href="#" class="footer-link">Support Contact</a></li>
+            </ul>
+            <p>&copy; 2026 NexExam. All rights reserved. Designed for excellence.</p>
+        </div>
+    </footer>
+
+    <!-- Global Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
+
+    <!-- Script file -->
+    <script src="script.js"></script>
+</body>
+</html>

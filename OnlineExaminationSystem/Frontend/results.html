@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Examination Result</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- jsPDF CDN for PDF Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- html2canvas for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="exams.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Exams</a></li>
+        </ul>
+        <div class="user-profile-nav" id="results-user-nav">
+            <!-- Dynamic profile menu -->
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="result-container" id="printable-result-card">
+            
+            <!-- Result Card -->
+            <div class="card" style="padding: 3rem;">
+                <span class="hero-tag" style="margin-bottom: 0.5rem;">Score Report</span>
+                <h2 class="hero-title" style="font-size: 2.25rem; margin-bottom: 1.5rem;" id="res-exam-title">Python Programming Test</h2>
+                
+                <!-- Animated Progress Score Circle -->
+                <div class="score-circle-wrapper">
+                    <svg class="score-circle-svg" width="200" height="200">
+                        <circle class="score-circle-bg" cx="100" cy="100" r="90"></circle>
+                        <circle class="score-circle-progress" id="score-progress" cx="100" cy="100" r="90"></circle>
+                    </svg>
+                    <div class="score-center-text">
+                        <div class="score-pct" id="res-percentage">0%</div>
+                        <div class="score-fraction" id="res-marks-fraction">0/0 Marks</div>
+                    </div>
+                </div>
+
+                <div>
+                    <span class="result-badge" id="res-status-badge">Processing...</span>
+                </div>
+
+                <div class="result-summary-grid">
+                    <div class="card" style="background: rgba(255,255,255,0.01); border-radius: var(--radius-md); padding: 1.25rem; text-align: left;">
+                        <div class="detail-label">Student Name</div>
+                        <div class="detail-val" id="res-student-name" style="font-size: 1.15rem; font-weight: 700; margin-top: 0.25rem;">Loading...</div>
+                    </div>
+                    <div class="card" style="background: rgba(255,255,255,0.01); border-radius: var(--radius-md); padding: 1.25rem; text-align: left;">
+                        <div class="detail-label">Report Date</div>
+                        <div class="detail-val" id="res-date" style="font-size: 1.15rem; font-weight: 700; margin-top: 0.25rem;">--/--/----</div>
+                    </div>
+                </div>
+
+                <div class="result-actions" style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                    <button class="nav-btn-outline" onclick="window.location.href = 'student_dashboard.html'">
+                        <i class="fa-solid fa-gauge"></i> My Dashboard
+                    </button>
+                    <button class="nav-btn" style="background: linear-gradient(135deg, var(--accent) 0%, var(--primary) 100%); box-shadow: 0 4px 14px rgba(217, 70, 239, 0.3);" onclick="downloadPDF()">
+                        <i class="fa-solid fa-file-pdf"></i> Download PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Leaderboard Panel (Bonus Feature) -->
+            <div class="leaderboard-panel" id="leaderboard-container">
+                <h3 class="leaderboard-title">
+                    <i class="fa-solid fa-trophy"></i> Top Scorers Leaderboard
+                </h3>
+                <div class="leaderboard-list" id="leaderboard-list-items">
+                    <!-- Populated dynamically -->
+                    <div style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                        <i class="fa-solid fa-spinner fa-spin"></i> Loading top scores...
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 NexExam. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        let resultId = null;
+        let currentResult = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            resultId = params.get('id');
+
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (user) {
+                document.getElementById('results-user-nav').innerHTML = `
+                    <div style="text-align: right; line-height: 1.2;">
+                        <div style="font-weight: 700;">${user.full_name}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">${user.role === 'admin' ? 'Administrator' : 'Student'}</div>
+                    </div>
+                    <div class="avatar-circle">${user.full_name.charAt(0)}</div>
+                `;
+            }
+
+            if (!resultId) {
+                document.getElementById('printable-result-card').innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--danger);">
+                        <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                        <h3 style="margin-top: 1rem;">Invalid Result reference</h3>
+                        <p style="margin-top: 0.5rem;"><a href="student_dashboard.html" class="form-link">Go to dashboard</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            loadResultDetails();
+        });
+
+        async function loadResultDetails() {
+            try {
+                // Fetch results list
+                const res = await fetch('/results/');
+                if (!res.ok) throw new Error("Failed to load results database");
+                const allResults = await res.json();
+                
+                // Find result
+                currentResult = allResults.find(x => x.result_id == resultId);
+                if (!currentResult) throw new Error("Result details not found");
+
+                // Render Details
+                document.getElementById('res-exam-title').innerText = currentResult.exam_title;
+                document.getElementById('res-percentage').innerText = `${currentResult.percentage}%`;
+                document.getElementById('res-marks-fraction').innerText = `${currentResult.obtained_marks} / ${currentResult.total_marks} Marks`;
+                document.getElementById('res-student-name').innerText = currentResult.student_name;
+                document.getElementById('res-date').innerText = new Date().toLocaleDateString('en-GB');
+
+                // Animate Progress Circle
+                const progressCircle = document.getElementById('score-progress');
+                const radius = 90;
+                const circumference = 2 * Math.PI * radius;
+                const offset = circumference - (currentResult.percentage / 100) * circumference;
+                progressCircle.style.strokeDasharray = circumference;
+                setTimeout(() => {
+                    progressCircle.style.strokeDashoffset = offset;
+                }, 200);
+
+                // Set Badge Pass/Fail Status
+                const badge = document.getElementById('res-status-badge');
+                badge.innerText = currentResult.result_status;
+                if (currentResult.result_status.toLowerCase() === 'pass') {
+                    badge.className = 'result-badge pass';
+                } else {
+                    badge.className = 'result-badge fail';
+                }
+
+                // Render Leaderboard
+                renderLeaderboard(allResults, currentResult.exam_title);
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('printable-result-card').innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--danger);">
+                        <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                        <h3 style="margin-top: 1rem;">Failed to retrieve scorecard details</h3>
+                        <p style="margin-top: 0.5rem; color: var(--text-secondary);">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLeaderboard(allResults, examTitle) {
+            // Filter by current exam
+            const examResults = allResults.filter(r => r.exam_title === examTitle);
+            
+            // Sort by obtained_marks descending, then percentage descending
+            examResults.sort((a, b) => b.obtained_marks - a.obtained_marks);
+            
+            // Slice top 5
+            const topFive = examResults.slice(0, 5);
+            const container = document.getElementById('leaderboard-list-items');
+            container.innerHTML = '';
+
+            topFive.forEach((item, index) => {
+                const rank = index + 1;
+                const isTopThree = rank <= 3;
+                const rankBadgeClass = isTopThree ? `rank-badge rank-${rank}` : 'rank-badge';
+                const rankText = isTopThree ? `<i class="fa-solid fa-award"></i>` : rank;
+
+                container.innerHTML += `
+                    <div class="leaderboard-item">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="${rankBadgeClass}">${isTopThree ? rankText : rank}</div>
+                            <div style="font-weight: 600;">${item.student_name}</div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">${item.percentage}%</div>
+                            <div style="font-weight: 700; color: var(--primary);">${item.obtained_marks} pts</div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        async function downloadPDF() {
+            // Download Result as PDF (Bonus Feature)
+            // Using html2canvas and jsPDF to capture the scorecard cleanly
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById('printable-result-card');
+            
+            // Temporarily hide buttons for clean capture
+            const actions = document.querySelector('.result-actions');
+            actions.style.display = 'none';
+
+            try {
+                const canvas = await html2canvas(element, {
+                    backgroundColor: '#0b0f19',
+                    scale: 2
+                });
+                
+                const imgData = canvas.toDataURL('image/png');
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                const imgWidth = 210; // A4 Width in mm
+                const pageHeight = 295; // A4 Height in mm
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                let heightLeft = imgHeight;
+                let position = 0;
+
+                pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                pdf.save(`NexExam_Report_${currentResult.student_name.replace(/\s+/g, '_')}.pdf`);
+                showNotification("PDF Scorecard downloaded successfully!", "success");
+            } catch (err) {
+                console.error("PDF generation failed", err);
+                // Fallback to standard window print
+                window.print();
+            } finally {
+                actions.style.display = 'flex';
+            }
+        }
+    </script>
+</body>
+</html>

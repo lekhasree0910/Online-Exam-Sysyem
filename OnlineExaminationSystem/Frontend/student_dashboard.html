@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Student Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="index.html" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam
+        </a>
+        <ul class="nav-links">
+            <li><a href="index.html" class="nav-link"><i class="fa-solid fa-house"></i> Home</a></li>
+            <li><a href="exams.html" class="nav-link"><i class="fa-solid fa-file-signature"></i> Exams</a></li>
+        </ul>
+        <div class="user-profile-nav" id="dash-user-nav">
+            <!-- Dynamic profile menu -->
+        </div>
+    </nav>
+
+    <main class="container">
+        <div class="dashboard-layout">
+            
+            <!-- Sidebar Selector -->
+            <div class="dashboard-sidebar">
+                <div style="text-align: center; margin-bottom: 2rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 1.5rem;">
+                    <div class="avatar-circle" style="width: 60px; height: 60px; font-size: 1.75rem; margin: 0 auto 0.75rem;" id="avatar-circle-large">U</div>
+                    <h3 style="font-family: var(--font-heading); font-size: 1.15rem;" id="lbl-student-name">Student Name</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary);" id="lbl-student-college">College Name</p>
+                </div>
+                
+                <ul class="sidebar-menu">
+                    <li class="sidebar-item active" id="menu-overview" onclick="switchTab('overview')">
+                        <i class="fa-solid fa-chart-pie"></i> Overview
+                    </li>
+                    <li class="sidebar-item" id="menu-exams" onclick="switchTab('exams')">
+                        <i class="fa-solid fa-file-signature"></i> Attempt Exams
+                    </li>
+                    <li class="sidebar-item" id="menu-history" onclick="switchTab('history')">
+                        <i class="fa-solid fa-clock-rotate-left"></i> Exam History
+                    </li>
+                    <li class="sidebar-item" id="menu-settings" onclick="switchTab('settings')">
+                        <i class="fa-solid fa-user-gear"></i> Profile Settings
+                    </li>
+                    <li class="sidebar-item" style="margin-top: 2rem; color: var(--danger);" onclick="logoutUser()">
+                        <i class="fa-solid fa-right-from-bracket"></i> Logout
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Main Dashboard Area -->
+            <div id="dashboard-content">
+                
+                <!-- TAB 1: OVERVIEW -->
+                <div id="tab-overview" class="tab-pane">
+                    <h2 class="hero-title" style="font-size: 2rem; margin-bottom: 1.5rem;">Student Overview</h2>
+                    
+                    <!-- Stats Grid -->
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color: var(--secondary); background: rgba(14,165,233,0.1);"><i class="fa-solid fa-clipboard-list"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-num" id="stat-registered-count">0</span>
+                                <span class="stat-label">Available Exams</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color: var(--success); background: var(--success-glow);"><i class="fa-solid fa-clipboard-check"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-num" id="stat-completed-count">0</span>
+                                <span class="stat-label">Completed Exams</span>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon" style="color: var(--accent); background: rgba(217,70,239,0.1);"><i class="fa-solid fa-percent"></i></div>
+                            <div class="stat-details">
+                                <span class="stat-num" id="stat-average-score">0%</span>
+                                <span class="stat-label">Average Score</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity Cards -->
+                    <div class="card" style="padding: 1.75rem; margin-bottom: 2rem;">
+                        <h3 class="table-title" style="margin-bottom: 1.25rem;"><i class="fa-solid fa-circle-play" style="color: var(--primary);"></i> Next Pending Exams</h3>
+                        <div class="exams-grid" id="pending-exams-brief" style="grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.25rem;">
+                            <!-- Dynamically loaded -->
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 1.75rem;">
+                        <h3 class="table-title" style="margin-bottom: 1.25rem;"><i class="fa-solid fa-award" style="color: var(--warning);"></i> Top Performance Summary</h3>
+                        <div class="table-container" style="margin-top: 0; border: none; box-shadow: none;">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Exam Title</th>
+                                        <th>Score</th>
+                                        <th>Percentage</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="overview-results-tbody">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TAB 2: ATTEMPT EXAMS -->
+                <div id="tab-exams" class="tab-pane" style="display: none;">
+                    <h2 class="hero-title" style="font-size: 2rem; margin-bottom: 1.5rem;">Attempt Examinations</h2>
+                    <div class="exams-grid" id="all-available-exams">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: EXAM HISTORY -->
+                <div id="tab-history" class="tab-pane" style="display: none;">
+                    <h2 class="hero-title" style="font-size: 2rem; margin-bottom: 1.5rem;">Exam Result Records</h2>
+                    <div class="table-container">
+                        <div class="table-header">
+                            <span class="table-title">Performance Records</span>
+                        </div>
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Exam Title</th>
+                                    <th>Total Marks</th>
+                                    <th>Obtained Marks</th>
+                                    <th>Percentage</th>
+                                    <th>Result</th>
+                                    <th>Scorecard</th>
+                                </tr>
+                            </thead>
+                            <tbody id="history-results-tbody">
+                                <!-- Filled by JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- TAB 4: PROFILE SETTINGS -->
+                <div id="tab-settings" class="tab-pane" style="display: none;">
+                    <h2 class="hero-title" style="font-size: 2rem; margin-bottom: 1.5rem;">Profile Settings</h2>
+                    <div class="card">
+                        <form id="profile-update-form" onsubmit="updateProfile(event)">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                                <div class="form-group">
+                                    <label class="form-label" for="prof-name">Full Name</label>
+                                    <input type="text" id="prof-name" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="prof-email">Email Address</label>
+                                    <input type="email" id="prof-email" class="form-control" required disabled>
+                                    <span style="font-size: 0.75rem; color: var(--text-muted);">Email address cannot be changed.</span>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="prof-phone">Phone Number</label>
+                                    <input type="tel" id="prof-phone" class="form-control" required>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label" for="prof-college">College / University</label>
+                                    <input type="text" id="prof-college" class="form-control" required>
+                                </div>
+                                <div class="form-group" style="grid-column: span 2;">
+                                    <label class="form-label" for="prof-password">Update Password</label>
+                                    <input type="password" id="prof-password" class="form-control" placeholder="Enter new password to modify">
+                                </div>
+                            </div>
+                            <button type="submit" class="nav-btn submit-btn" style="max-width: 200px; margin-top: 1rem;">
+                                <i class="fa-solid fa-floppy-disk"></i> Save Profile
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <p>&copy; 2026 NexExam. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Global Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        let studentUser = null;
+        let availableExams = [];
+        let completedResults = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user || user.role !== 'student') {
+                window.location.href = 'login.html';
+                return;
+            }
+            studentUser = user;
+
+            // Load header nav profile
+            document.getElementById('dash-user-nav').innerHTML = `
+                <div style="text-align: right; line-height: 1.2;">
+                    <div style="font-weight: 700;">${user.full_name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Student Account</div>
+                </div>
+                <div class="avatar-circle">${user.full_name.charAt(0)}</div>
+            `;
+
+            // Load left info
+            document.getElementById('lbl-student-name').innerText = user.full_name;
+            document.getElementById('lbl-student-college').innerText = user.college;
+            document.getElementById('avatar-circle-large').innerText = user.full_name.charAt(0);
+
+            // Populate form fields
+            document.getElementById('prof-name').value = user.full_name;
+            document.getElementById('prof-email').value = user.email;
+            document.getElementById('prof-phone').value = user.phone;
+            document.getElementById('prof-college').value = user.college;
+            document.getElementById('prof-password').value = user.password;
+
+            loadDashboardStats();
+        });
+
+        async function loadDashboardStats() {
+            try {
+                // Fetch exams list
+                const examsRes = await fetch('/exams/');
+                if (!examsRes.ok) throw new Error("Failed to load examinations database");
+                const allExams = await examsRes.json();
+
+                // Fetch result records
+                const resRes = await fetch('/results/');
+                if (!resRes.ok) throw new Error("Failed to load results database");
+                const allResults = await resRes.json();
+
+                // Filter results completed by this student
+                completedResults = allResults.filter(r => r.student_name === studentUser.full_name);
+                
+                // Identify pending examinations (exams for which student does not have results)
+                const completedTitles = completedResults.map(r => r.exam_title);
+                availableExams = allExams;
+                const pendingExams = allExams.filter(e => !completedTitles.includes(e.exam_title));
+
+                // Populate stats numbers
+                document.getElementById('stat-registered-count').innerText = pendingExams.length;
+                document.getElementById('stat-completed-count').innerText = completedResults.length;
+                
+                // Compute average score percentage
+                if (completedResults.length > 0) {
+                    const avg = Math.round(completedResults.reduce((acc, curr) => acc + curr.percentage, 0) / completedResults.length);
+                    document.getElementById('stat-average-score').innerText = `${avg}%`;
+                } else {
+                    document.getElementById('stat-average-score').innerText = '0%';
+                }
+
+                // Render Overview briefs
+                renderOverviewBriefs(pendingExams, completedResults);
+
+                // Render tab contents
+                renderAttemptExamsTab(pendingExams);
+                renderHistoryTab(completedResults);
+
+            } catch (err) {
+                console.error(err);
+                showNotification(`Dashboard Load Error: ${err.message}`, "error");
+            }
+        }
+
+        function renderOverviewBriefs(pending, completed) {
+            // Render pending exams grid (max 3)
+            const grid = document.getElementById('pending-exams-brief');
+            grid.innerHTML = '';
+            
+            if (pending.length === 0) {
+                grid.innerHTML = `<p style="grid-column: span 3; color: var(--text-secondary); text-align: center; padding: 1.5rem;">All registered examinations completed! 🎉</p>`;
+            } else {
+                pending.slice(0, 3).forEach(exam => {
+                    grid.innerHTML += `
+                        <div class="card" style="background: rgba(255,255,255,0.01); border-radius: var(--radius-md); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                            <div>
+                                <span class="exam-subject" style="font-size: 0.7rem; padding: 0.25rem 0.5rem;">${exam.subject}</span>
+                                <h4 style="margin: 0.5rem 0 1rem; font-family: var(--font-heading);">${exam.exam_title}</h4>
+                            </div>
+                            <button class="btn-sm btn-edit" style="width: 100%; border-radius: var(--radius-md); padding: 0.5rem;" onclick="attemptExam(${exam.exam_id})">
+                                <i class="fa-solid fa-play"></i> Attempt Exam
+                            </button>
+                        </div>
+                    `;
+                });
+            }
+
+            // Render top results list (max 5)
+            const tbody = document.getElementById('overview-results-tbody');
+            tbody.innerHTML = '';
+            if (completed.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-secondary);">No exams attempted yet.</td></tr>`;
+            } else {
+                completed.slice(0, 5).forEach(res => {
+                    const statusClass = res.result_status.toLowerCase() === 'pass' ? 'color: var(--success); font-weight: 700;' : 'color: var(--danger); font-weight: 700;';
+                    tbody.innerHTML += `
+                        <tr>
+                            <td>${res.exam_title}</td>
+                            <td>${res.obtained_marks}/${res.total_marks}</td>
+                            <td>${res.percentage}%</td>
+                            <td style="${statusClass}">${res.result_status}</td>
+                            <td>
+                                <button class="btn-sm btn-edit" onclick="viewScorecard(${res.result_id})"><i class="fa-solid fa-eye"></i> View</button>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+        }
+
+        function renderAttemptExamsTab(pending) {
+            const container = document.getElementById('all-available-exams');
+            container.innerHTML = '';
+
+            if (pending.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--text-secondary); padding: 3rem;">
+                        <i class="fa-solid fa-face-smile fa-3x" style="color: var(--success); margin-bottom: 1rem;"></i>
+                        <h3>All Done!</h3>
+                        <p style="margin-top: 0.5rem;">You have completed all available examinations.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            pending.forEach(exam => {
+                container.innerHTML += `
+                    <div class="card exam-card">
+                        <div class="exam-header">
+                            <span class="exam-subject">${exam.subject}</span>
+                            <span class="exam-date-badge"><i class="fa-regular fa-calendar"></i> ${exam.exam_date}</span>
+                        </div>
+                        <h3 class="exam-card-title">${exam.exam_title}</h3>
+                        <div class="exam-details">
+                            <div class="detail-item">
+                                <span class="detail-label">Duration</span>
+                                <span class="detail-val"><i class="fa-regular fa-clock"></i> ${exam.duration}m</span>
+                            </div>
+                            <div class="detail-item">
+                                <span class="detail-label">Total Marks</span>
+                                <span class="detail-val"><i class="fa-regular fa-circle-check"></i> ${exam.total_marks} pts</span>
+                            </div>
+                        </div>
+                        <button class="nav-btn exam-action" onclick="attemptExam(${exam.exam_id})">
+                            <i class="fa-solid fa-play"></i> Start Exam
+                        </button>
+                    </div>
+                `;
+            });
+        }
+
+        function renderHistoryTab(completed) {
+            const tbody = document.getElementById('history-results-tbody');
+            tbody.innerHTML = '';
+
+            if (completed.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 2rem;">No test records available. Go to Attempt Exams tab to begin.</td></tr>`;
+                return;
+            }
+
+            completed.forEach(res => {
+                const statusClass = res.result_status.toLowerCase() === 'pass' ? 'color: var(--success); font-weight: 700;' : 'color: var(--danger); font-weight: 700;';
+                tbody.innerHTML += `
+                    <tr>
+                        <td><strong>${res.exam_title}</strong></td>
+                        <td>${res.total_marks}</td>
+                        <td>${res.obtained_marks}</td>
+                        <td>${res.percentage}%</td>
+                        <td style="${statusClass}">${res.result_status}</td>
+                        <td>
+                            <button class="btn-sm btn-edit" onclick="viewScorecard(${res.result_id})">
+                                <i class="fa-solid fa-file-pdf"></i> View Scorecard
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.style.display = 'none');
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            document.getElementById(`menu-${tabName}`).classList.add('active');
+        }
+
+        function attemptExam(examId) {
+            window.location.href = `exams.html`; // Redirects to exam launcher
+        }
+
+        function viewScorecard(resultId) {
+            window.location.href = `results.html?id=${resultId}`;
+        }
+
+        async function updateProfile(event) {
+            event.preventDefault();
+            const name = document.getElementById('prof-name').value;
+            const phone = document.getElementById('prof-phone').value;
+            const college = document.getElementById('prof-college').value;
+            const password = document.getElementById('prof-password').value;
+
+            try {
+                const res = await fetch(`/students/update/${studentUser.student_id}/`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        full_name: name,
+                        phone: phone,
+                        college: college,
+                        password: password
+                    })
+                });
+
+                if (!res.ok) throw new Error("Failed to save changes");
+                
+                const updated = await res.json();
+                
+                // Update LocalStorage
+                const sessionUser = {
+                    ...studentUser,
+                    full_name: updated.full_name,
+                    phone: updated.phone,
+                    college: updated.college,
+                    password: updated.password
+                };
+                localStorage.setItem('currentUser', JSON.stringify(sessionUser));
+                studentUser = sessionUser;
+
+                // Update UI Labels
+                document.getElementById('lbl-student-name').innerText = updated.full_name;
+                document.getElementById('lbl-student-college').innerText = updated.college;
+                
+                showNotification("Profile settings updated successfully!", "success");
+            } catch (err) {
+                console.error(err);
+                showNotification(err.message, "error");
+            }
+        }
+    </script>
+</body>
+</html>

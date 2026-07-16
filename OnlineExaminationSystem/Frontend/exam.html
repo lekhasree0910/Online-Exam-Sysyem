@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NexExam | Examination Terminal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar">
+        <a href="#" class="nav-brand">
+            <i class="fa-solid fa-graduation-cap"></i> NexExam Terminal
+        </a>
+        <div class="user-profile-nav" id="terminal-user-info">
+            <!-- Populated via script -->
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- Main Quiz Board Layout -->
+        <div class="exam-layout" id="exam-terminal-layout">
+            
+            <!-- Left Panel: Question Display -->
+            <div class="question-panel">
+                <div class="question-header">
+                    <span class="question-number" id="question-number-lbl">Question 1 of ...</span>
+                    <span class="question-weight" id="question-weight-lbl">Weight: ... Marks</span>
+                </div>
+                
+                <!-- Progress Line -->
+                <div style="background: rgba(255,255,255,0.05); width: 100%; height: 6px; border-radius: var(--radius-full); margin-bottom: 2rem; overflow: hidden;">
+                    <div id="exam-progress-bar" style="background: linear-gradient(90deg, var(--primary), var(--secondary)); width: 0%; height: 100%; transition: var(--transition);"></div>
+                </div>
+
+                <div class="question-text" id="question-text-lbl">
+                    Loading examination questions...
+                </div>
+
+                <div class="options-list" id="question-options-container">
+                    <!-- Dynamic radio options -->
+                </div>
+
+                <div class="exam-controls">
+                    <button class="nav-btn-outline" id="prev-btn" onclick="prevQuestion()" disabled>
+                        <i class="fa-solid fa-chevron-left"></i> Previous
+                    </button>
+                    <button class="nav-btn" id="next-btn" onclick="nextQuestion()">
+                        Next <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Side Panel for Timer Navigation -->
+            <div class="exam-sidebar">
+                <div class="timer-box" id="timer-box-container">
+                    <div class="timer-title">Time Remaining</div>
+                    <div class="timer-display" id="time-remaining-lbl">
+                        <i class="fa-regular fa-clock"></i> <span id="timer-text">--:--</span>
+                    </div>
+                </div>
+
+                <div class="question-nav">
+                    <h4 style="font-family: var(--font-heading); font-size: 0.95rem; margin-bottom: 0.75rem; border-bottom: 1px solid var(--glass-border); padding-bottom: 0.5rem;">
+                        Question Map
+                    </h4>
+                    <div class="nav-grid" id="question-nav-grid">
+                        <!-- Round navigation buttons -->
+                    </div>
+                    <div style="margin-top: 1.5rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                        <button class="nav-btn submit-btn" style="background: linear-gradient(135deg, var(--success) 0%, #047857 100%); box-shadow: 0 4px 14px var(--success-glow);" onclick="confirmSubmit()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Submit Exam
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Confirm Submit Modal -->
+    <div class="modal-overlay" id="submit-confirm-modal">
+        <div class="modal-content" style="max-width: 440px; text-align: center;">
+            <i class="fa-solid fa-circle-question fa-3x" style="color: var(--warning); margin-bottom: 1.5rem;"></i>
+            <h3 class="modal-title">Finish Examination?</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+                Are you sure you want to finalize your exam answers and submit? You cannot revise your answers after submitting.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="nav-btn-outline" onclick="closeSubmitModal()">Return to Exam</button>
+                <button class="nav-btn" style="background: var(--success);" onclick="submitExamAnswers()">Yes, Submit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global Notification Container -->
+    <div class="notification-container" id="notification-container"></div>
+
+    <script src="script.js"></script>
+    <script>
+        let examId = null;
+        let examDetails = null;
+        let questions = [];
+        let currentIndex = 0;
+        let answersMap = {}; // Maps question index -> chosen letter ('A', 'B', 'C', 'D')
+        let totalSeconds = 0;
+        let timerInterval = null;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            examId = params.get('id');
+            
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if (!user) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            document.getElementById('terminal-user-info').innerHTML = `
+                <div style="text-align: right; line-height: 1.2;">
+                    <div style="font-weight: 700;">${user.full_name}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">${user.college}</div>
+                </div>
+                <div class="avatar-circle">${user.full_name.charAt(0)}</div>
+            `;
+
+            if (!examId) {
+                document.getElementById('exam-terminal-layout').innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--danger);">
+                        <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                        <h3 style="margin-top: 1rem;">Invalid Examination reference</h3>
+                        <p style="margin-top: 0.5rem;"><a href="exams.html" class="form-link">Go back to exams list</a></p>
+                    </div>
+                `;
+                return;
+            }
+
+            loadExamSession();
+        });
+
+        async function loadExamSession() {
+            try {
+                // Fetch exam details
+                const examRes = await fetch('/exams/');
+                if (!examRes.ok) throw new Error("Failed to load exam specs");
+                const allExams = await examRes.json();
+                examDetails = allExams.find(x => x.exam_id == examId);
+                
+                if (!examDetails) throw new Error("Exam not found");
+
+                // Fetch questions for this exam
+                const questRes = await fetch(`/questions/?exam_title=${encodeURIComponent(examDetails.exam_title)}`);
+                if (!questRes.ok) throw new Error("Failed to load questions");
+                questions = await questRes.json();
+
+                if (questions.length === 0) {
+                    document.getElementById('exam-terminal-layout').innerHTML = `
+                        <div class="card" style="width: 100%; text-align: center; color: var(--warning);">
+                            <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+                            <h3 style="margin-top: 1rem;">No Questions Configured</h3>
+                            <p style="margin-top: 0.5rem; color: var(--text-secondary);">This exam doesn't have any multiple choice questions configured yet.</p>
+                            <p style="margin-top: 1rem;"><a href="exams.html" class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Go Back</a></p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Shuffled Question Order (Bonus Feature)
+                shuffleArray(questions);
+
+                // Initialize Timer
+                totalSeconds = examDetails.duration * 60;
+                startTimer();
+
+                // Setup Question Navigator
+                buildQuestionNav();
+
+                // Render first question
+                renderQuestion();
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('exam-terminal-layout').innerHTML = `
+                    <div class="card" style="width: 100%; text-align: center; color: var(--danger);">
+                        <i class="fa-solid fa-circle-exclamation fa-2x"></i>
+                        <h3 style="margin-top: 1rem;">Failed to initialize exam terminal</h3>
+                        <p style="margin-top: 0.5rem; color: var(--text-secondary);">${err.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                totalSeconds--;
+                updateTimerDisplay();
+
+                if (totalSeconds <= 60) {
+                    document.getElementById('timer-box-container').classList.add('timer-urgent');
+                }
+
+                if (totalSeconds <= 0) {
+                    clearInterval(timerInterval);
+                    showNotification("Time has expired! Submitting answers automatically...", "warning");
+                    // Auto Submit When Time Expires (Bonus Feature)
+                    submitExamAnswers(true);
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(totalSeconds / 60);
+            const secs = totalSeconds % 60;
+            const text = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+            document.getElementById('timer-text').innerText = text;
+        }
+
+        function buildQuestionNav() {
+            const grid = document.getElementById('question-nav-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < questions.length; i++) {
+                const numBtn = document.createElement('div');
+                numBtn.className = 'nav-num';
+                numBtn.id = `nav-num-${i}`;
+                numBtn.innerText = i + 1;
+                numBtn.onclick = () => jumpToQuestion(i);
+                grid.appendChild(numBtn);
+            }
+        }
+
+        function renderQuestion() {
+            const q = questions[currentIndex];
+            
+            // Labels
+            document.getElementById('question-number-lbl').innerText = `Question ${currentIndex + 1} of ${questions.length}`;
+            document.getElementById('question-weight-lbl').innerText = `Weight: ${q.marks} Marks`;
+            document.getElementById('question-text-lbl').innerText = q.question;
+
+            // Progress bar width
+            const pct = ((currentIndex + 1) / questions.length) * 100;
+            document.getElementById('exam-progress-bar').style.width = `${pct}%`;
+
+            // Options mapping
+            const optContainer = document.getElementById('question-options-container');
+            optContainer.innerHTML = '';
+
+            const options = [
+                { key: 'A', text: q.option_a },
+                { key: 'B', text: q.option_b },
+                { key: 'C', text: q.option_c },
+                { key: 'D', text: q.option_d }
+            ];
+
+            const chosen = answersMap[currentIndex];
+
+            options.forEach(opt => {
+                const checked = chosen === opt.key ? 'checked' : '';
+                optContainer.innerHTML += `
+                    <div class="option-wrapper">
+                        <input type="radio" name="exam-option" id="opt-${opt.key}" class="option-input" value="${opt.key}" ${checked} onchange="saveAnswer('${opt.key}')">
+                        <label for="opt-${opt.key}" class="option-label">
+                            <span class="option-marker">${opt.key}</span>
+                            <span>${opt.text}</span>
+                        </label>
+                    </div>
+                `;
+            });
+
+            // Active Navigator highlight
+            document.querySelectorAll('.nav-num').forEach((btn, index) => {
+                btn.classList.remove('active');
+                if (answersMap[index] !== undefined) {
+                    btn.classList.add('answered');
+                } else {
+                    btn.classList.remove('answered');
+                }
+            });
+            document.getElementById(`nav-num-${currentIndex}`).classList.add('active');
+
+            // Previous/Next Buttons disable state
+            document.getElementById('prev-btn').disabled = currentIndex === 0;
+            const nextBtn = document.getElementById('next-btn');
+            if (currentIndex === questions.length - 1) {
+                nextBtn.innerHTML = `Finish <i class="fa-solid fa-circle-check"></i>`;
+                nextBtn.onclick = confirmSubmit;
+            } else {
+                nextBtn.innerHTML = `Next <i class="fa-solid fa-chevron-right"></i>`;
+                nextBtn.onclick = nextQuestion;
+            }
+        }
+
+        function saveAnswer(optionKey) {
+            answersMap[currentIndex] = optionKey;
+            document.getElementById(`nav-num-${currentIndex}`).classList.add('answered');
+        }
+
+        function nextQuestion() {
+            if (currentIndex < questions.length - 1) {
+                currentIndex++;
+                renderQuestion();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                renderQuestion();
+            }
+        }
+
+        function jumpToQuestion(index) {
+            currentIndex = index;
+            renderQuestion();
+        }
+
+        function confirmSubmit() {
+            document.getElementById('submit-confirm-modal').classList.add('open');
+        }
+
+        function closeSubmitModal() {
+            document.getElementById('submit-confirm-modal').classList.remove('open');
+        }
+
+        async function submitExamAnswers(isAutoSubmit = false) {
+            if (timerInterval) clearInterval(timerInterval);
+            closeSubmitModal();
+
+            // Evaluate answers
+            let obtainedMarks = 0;
+            let totalPossible = 0;
+            let answeredStringParts = [];
+
+            questions.forEach((q, index) => {
+                const selected = answersMap[index] || ""; // Chosen option key: 'A', 'B', 'C', 'D'
+                let correctKey = "";
+
+                // Find the option letter that matches correct_answer text
+                if (q.correct_answer === q.option_a) correctKey = "A";
+                else if (q.correct_answer === q.option_b) correctKey = "B";
+                else if (q.correct_answer === q.option_c) correctKey = "C";
+                else if (q.correct_answer === q.option_d) correctKey = "D";
+
+                // Add to submitted answer details: Q1:selected,Q2:selected
+                const questionNumber = index + 1;
+                const submittedVal = selected ? q[`option_${selected.toLowerCase()}`] : "";
+                answeredStringParts.push(`Q${questionNumber}:${submittedVal}`);
+
+                totalPossible += q.marks;
+
+                // Validate if correct
+                if (selected && selected === correctKey) {
+                    obtainedMarks += q.marks;
+                }
+            });
+
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            const studentName = user ? user.full_name : "Rahul Sharma";
+            const examTitle = examDetails.exam_title;
+            const submittedAnswersString = answeredStringParts.join(",");
+
+            const percentage = totalPossible > 0 ? Math.round((obtainedMarks / totalPossible) * 100) : 0;
+            // The score should be in ratio of the exam's total marks! 
+            // Scale obtained marks to the exam's designated total marks limit if needed.
+            // But let's assume totalPossible equals examDetails.total_marks. 
+            // If they differ, scale it:
+            const finalScore = totalPossible > 0 ? Math.round((obtainedMarks / totalPossible) * examDetails.total_marks) : 0;
+            const finalStatus = finalScore >= (examDetails.total_marks * 0.4) ? "Pass" : "Fail"; // 40% passing standard
+
+            try {
+                // 1. Save submission
+                const subResponse = await fetch('/submissions/add/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_name: studentName,
+                        exam_title: examTitle,
+                        submitted_answers: submittedAnswersString,
+                        score: finalScore
+                    })
+                });
+
+                if (!subResponse.ok) throw new Error("Failed to record exam submission");
+                const submissionResult = await subResponse.json();
+
+                // 2. Save result
+                const resResponse = await fetch('/results/add/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        student_name: studentName,
+                        exam_title: examTitle,
+                        total_marks: examDetails.total_marks,
+                        obtained_marks: finalScore,
+                        percentage: percentage,
+                        result_status: finalStatus
+                    })
+                });
+
+                if (!resResponse.ok) throw new Error("Failed to compile result records");
+                const resultData = await resResponse.json();
+
+                // Redirect to Results Page with result ID
+                window.location.href = `results.html?id=${resultData.result_id}`;
+
+            } catch (err) {
+                console.error(err);
+                alert(`Error saving test submission: ${err.message}. Please contact the administrator.`);
+            }
+        }
+    </script>
+</body>
+</html>
